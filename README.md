@@ -10,8 +10,8 @@ Program usage:
 ```
 optional arguments:
  -h, --help   show this help message and exit
- -b, --boost  Boost CPU computation with PyTorch
- -p, --plot   Plot the heatmaps
+ -b, --boost  boost CPU computation with PyTorch
+ -p, --plot   plot the heatmaps
  ```
  
 #### Dependencies
