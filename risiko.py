@@ -2,8 +2,6 @@ import argparse
 import re
 import math
 import numpy as np
-import torch
-import matplotlib.pyplot as plt
 
 #TODO
 # plot 3d
@@ -179,6 +177,8 @@ def solve(attacker, defender, mode):
     if mode == 'numpy':
         matrixF = np.linalg.inv(np.identity(attacker * defender) - matrixQ) @ matrixR
     elif mode == 'pytorch':
+        import torch
+
         tensorQ = torch.from_numpy(matrixQ)
         tensorR = torch.from_numpy(matrixR) 
         tensorF = torch.mm(torch.inverse(torch.eye(attacker * defender, dtype=float) - tensorQ), tensorR)
@@ -231,5 +231,7 @@ if __name__ == '__main__':
     print ('Attacker expected losses: %.2f' % ev)
 
     if(args.plot):
+        import matplotlib.pyplot as plt
+
         plot_heatmap(pm, 'win probability')
         plot_heatmap(evm, 'losses expected value')
