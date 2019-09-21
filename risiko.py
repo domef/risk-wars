@@ -219,7 +219,7 @@ def plot_heatmap(matrix, label):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='A program that, given the armies size of the attacker and the defender, calculates the probability of winning the battle and the expected losses of the attacker using Markov chain.')
-    parser.add_argument('-b', '--boost', default=False, action='store_true', help='boost CPU computation with PyTorch')
+    parser.add_argument('-b', '--boost', default=False, action='store_true', help='boost CPU computation')
     parser.add_argument('-p', '--plot', default=False, action='store_true', help='plot the heatmaps')
 
     args = parser.parse_args()
