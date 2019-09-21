@@ -1,16 +1,14 @@
-import numpy as np
+import argparse
 import re
-import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
-# import torch
 import math
+import numpy as np
+import torch
+import matplotlib.pyplot as plt
 
 #TODO
 # plot 3d
-# fix gui graph
-# line args
 # input loop?
-# README.md
+# doc
 
 def read():
     """
@@ -38,8 +36,8 @@ def get_probabilities():
     """
     """
     # dim 0: attackers number
-    # dim 1: defenders num
-    # dim 2: attackers losses
+    # dim 1: defenders number
+    # dim 2: attacker losses
 
     probabilities = [
         [
@@ -61,7 +59,7 @@ def get_probabilities():
 
     return probabilities
 
-def solve(attacker, defender):
+def solve(attacker, defender, mode):
     """
     """
 
@@ -178,17 +176,16 @@ def solve(attacker, defender):
     # tensorF = torch.mm(temp2, tensorR).cpu  ()
     # matrixF = tensorF.numpy()
 
-    #cupy
-    # matrixQ = cp.array(matrixQ)
-    # matrixR = cp.array(matrixR)
-    # matrixF = cp.matmul(cp.linalg.inv(cp.identity(attacker * defender) - matrixQ), matrixR)
-    # matrixF = cp.asnumpy(matrixF)
-
-    #numpy
-    matrixF = np.linalg.inv(np.identity(attacker * defender) - matrixQ) @ matrixR
+    if mode == 'numpy':
+        matrixF = np.linalg.inv(np.identity(attacker * defender) - matrixQ) @ matrixR
+    elif mode == 'pytorch':
+        tensorQ = torch.from_numpy(matrixQ)
+        tensorR = torch.from_numpy(matrixR) 
+        tensorF = torch.mm(torch.inverse(torch.eye(attacker * defender, dtype=float) - tensorQ), tensorR)
+        matrixF = tensorF.numpy()
 
     # test if matrixF is well-formed
-    print(all(math.isclose(sum(row), 1) for row in matrixF))
+    # print(all(math.isclose(sum(row), 1) for row in matrixF))
 
     winA = sum(matrixF[attacker * defender - 1][i] for i in range(attacker, attacker + defender))
     # winD = (1 - winA) * 100
@@ -206,60 +203,33 @@ def solve(attacker, defender):
 
     return winA, losses, pm, evm
 
-if __name__ == '__main__':
-    # print ('WARNING: 1 attacking tank is always considered to stay still\n')
-    attacker, defender = read()
-    p, ev, pm, evm = solve(attacker, defender)
-    print ('Win probability: %.2f' % (p * 100) + '%')
-    print ('Attacker expected losses: %.2f' % ev)
+def plot_heatmap(matrix, label):
+    """
+    """
 
-    plt.imshow(pm, cmap='hot', origin='lower')
-    plt.gcf().canvas.set_window_title('win probability')
+    plt.imshow(matrix, cmap='hot', origin='lower')
+    plt.gcf().canvas.set_window_title(label)
     # plt.title('win probability')
     plt.xlabel('defenders')
     plt.ylabel('attackers')
     clb = plt.colorbar()
-    clb.set_label('win probability')    
+    clb.set_label(label)    
     plt.show()
 
-    plt.imshow(evm, cmap='hot')
-    plt.gcf().canvas.set_window_title('losses expected value')
-    # plt.title('losses expected value')
-    plt.xlabel('defenders')
-    plt.ylabel('attackers')
-    clb = plt.colorbar()
-    clb.set_label('losses expected value')
-    plt.show()
 
-    # n = 10
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='description')
+    parser.add_argument('-b', '--boost', default=False, action='store_true', help='Boost CPU computation with PyTorch')
+    parser.add_argument('-p', '--plot', default=False, action='store_true', help='Plot the heatmaps')
 
-    # def fun(x, y):
-    #     p, ev = solve(x, y)
-    #     return p
-    #     # return ev
+    args = parser.parse_args()
 
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # x = y = np.array(list(range(1, n)))
-    # X, Y = np.meshgrid(x, y)
+    # print ('WARNING: 1 attacking tank is always considered to stay still\n')
+    attacker, defender = read()
+    p, ev, pm, evm = solve(attacker, defender, 'pytorch' if args.boost else 'numpy')
+    print ('Win probability: %.2f' % (p * 100) + '%')
+    print ('Attacker expected losses: %.2f' % ev)
 
-    # for x, y in zip(np.ravel(X), np.ravel(Y)):
-    #     print(str(x) + ' ' + str(y))
-
-    # zs = np.array([fun(x, y) / 100 for x, y in zip(np.ravel(X), np.ravel(Y))])
-    # zs = np.array(fun(np.ravel(X), np.ravel(Y)))
-    # Z = 
-
-    # ax.plot_surface(X, Y, Z)
-
-    # ax.set_xlabel('attackers')
-    # ax.set_ylabel('defenders')
-    # ax.set_zlabel('win probability')
-    # ax.set_zlabel('expected value')
-
-    # plt.show()
-
-    # for interp in ['none', 'nearest', 'bilinear', 'bicubic', 'spline16', 'spline36', 'hanning', 'hamming', 'hermite', 'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell', 'sinc', 'lanczos']:
-    #     print(interp)
-    #     plt.imshow(Z, cmap='hot', interpolation=interp)
-    #     plt.show()
+    if(args.plot):
+        plot_heatmap(pm, 'win probability')
+        plot_heatmap(evm, 'losses expected value')
