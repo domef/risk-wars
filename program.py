@@ -216,7 +216,7 @@ if __name__ == '__main__':
 
     # print ('WARNING: 1 attacking tank is always considered to stay still\n')
     attacker, defender = read()
-    p, ev, pm, evm = solve(attacker, defender, parser.boost)
+    p, ev, pm, evm = solve(attacker, defender, args.boost)
     print ('Win probability: %.2f' % (p * 100) + '%')
     print ('Attacker expected losses: %.2f' % ev)
 
