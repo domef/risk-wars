@@ -57,7 +57,7 @@ def get_probabilities():
 
     return probabilities
 
-def solve(attacker, defender, mode):
+def solve(attacker, defender, boost):
     """
     """
 
@@ -164,25 +164,15 @@ def solve(attacker, defender, mode):
             if j >= 3 and i == 2:
                 matrixR[i * defender + j][j] = probabilities[2][2][3]
 
-    # dev = torch.device('cuda')
-
-    # pytorch
-    # tensorQ = torch.from_numpy(matrixQ).to(dev)
-    # tensorR = torch.from_numpy(matrixR).to(dev)
-    # temp1 = torch.eye(attacker * defender, dtype=float).to(dev) - tensorQ
-    # temp2 = torch.inverse(temp1).to(dev)
-    # tensorF = torch.mm(temp2, tensorR).cpu  ()
-    # matrixF = tensorF.numpy()
-
-    if mode == 'numpy':
-        matrixF = np.linalg.inv(np.identity(attacker * defender) - matrixQ) @ matrixR
-    elif mode == 'pytorch':
+    if boost:
         import torch
 
         tensorQ = torch.from_numpy(matrixQ)
         tensorR = torch.from_numpy(matrixR) 
         tensorF = torch.mm(torch.inverse(torch.eye(attacker * defender, dtype=float) - tensorQ), tensorR)
         matrixF = tensorF.numpy()
+    else:
+        matrixF = np.linalg.inv(np.identity(attacker * defender) - matrixQ) @ matrixR
 
     # test if matrixF is well-formed
     # print(all(math.isclose(sum(row), 1) for row in matrixF))
@@ -226,7 +216,7 @@ if __name__ == '__main__':
 
     # print ('WARNING: 1 attacking tank is always considered to stay still\n')
     attacker, defender = read()
-    p, ev, pm, evm = solve(attacker, defender, 'pytorch' if args.boost else 'numpy')
+    p, ev, pm, evm = solve(attacker, defender, parser.boost)
     print ('Win probability: %.2f' % (p * 100) + '%')
     print ('Attacker expected losses: %.2f' % ev)
 
