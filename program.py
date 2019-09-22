@@ -5,6 +5,7 @@ import numpy as np
 
 #TODO
 # plot 3d
+# plot probability for each losses value
 # input loop?
 # doc
 
@@ -177,8 +178,8 @@ def solve(attacker, defender, boost):
     # test if matrixF is well-formed
     # print(all(math.isclose(sum(row), 1) for row in matrixF))
 
-    winA = sum(matrixF[attacker * defender - 1][i] for i in range(attacker, attacker + defender))
-    # winD = (1 - winA) * 100
+    winA = sum(matrixF[attacker * defender - 1][i + defender] for i in range(attacker))
+    # winD = 1 - winA
 
     pm = np.array([1 - sum(matrixF[attacker * defender - 1 - j][i] for i in range(defender)) for j in range(attacker * defender)]).reshape((attacker, defender))
     pm = np.rot90(pm, k=2)
