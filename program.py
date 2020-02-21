@@ -2,10 +2,16 @@ import argparse
 import re
 import math
 import numpy as np
+import copy
 
 #TODO
+# fix plotting (axes start from 0, colorbar not always shows 0 and 1)
+# expexted values and variance + matrices for heatmap
+# normal distribution?
 # plot 3d
-# plot probability for each losses value
+# plot histograms
+# calculate matrices only if --plot?
+# get statistics from matrices?
 # input loop?
 # doc
 
@@ -58,7 +64,7 @@ def get_probabilities():
 
     return probabilities
 
-def solve(attacker, defender, boost):
+def solve(attacker, defender):
     """
     """
 
@@ -165,34 +171,38 @@ def solve(attacker, defender, boost):
             if j >= 3 and i == 2:
                 matrixR[i * defender + j][j] = probabilities[2][2][3]
 
-    if boost:
-        import torch
-
-        tensorQ = torch.from_numpy(matrixQ)
-        tensorR = torch.from_numpy(matrixR) 
-        tensorF = torch.mm(torch.inverse(torch.eye(attacker * defender, dtype=float) - tensorQ), tensorR)
-        matrixF = tensorF.numpy()
-    else:
-        matrixF = np.linalg.inv(np.identity(attacker * defender) - matrixQ) @ matrixR
+    matrixF = np.linalg.inv(np.identity(attacker * defender) - matrixQ) @ matrixR
 
     # test if matrixF is well-formed
     # print(all(math.isclose(sum(row), 1) for row in matrixF))
 
-    winA = sum(matrixF[attacker * defender - 1][i + defender] for i in range(attacker))
+    # matrixF sparsity ratio
+    # print(len(matrixF[matrixF == 0]) / len(matrixF.flatten()))
+
+    # sparsity matrix
+    # sparsity = copy.deepcopy(matrixF)
+    # sparsity[sparsity != 0] = 1
+
+    winA = sum(matrixF[attacker * defender - 1][defender + i] for i in range(attacker))
     # winD = 1 - winA
 
-    pm = np.array([1 - sum(matrixF[attacker * defender - 1 - j][i] for i in range(defender)) for j in range(attacker * defender)]).reshape((attacker, defender))
+    pm = np.array([sum(matrixF[attacker * defender - 1 - j][defender + i] for i in range(attacker)) for j in range(attacker * defender)]).reshape((attacker, defender))
     pm = np.rot90(pm, k=2)
 
-    remaining = sum((i + 1) * matrixF[attacker * defender - 1][i + defender] for i in range(attacker))
-    losses = attacker - remaining
+    # print(matrixF[attacker * defender - 1 - j])
 
-    evm = np.array([attacker - sum((i + 1) * matrixF[attacker * defender - 1 - j][i + defender] for i in range(attacker)) for j in range(attacker * defender)]).reshape((attacker, defender))
-    evm = np.rot90(evm, k=2)
+    # winA = pm[attacker - 1][defender - 1]
+
+    losses_evs = list(reversed([1 - matrixF[attacker * defender - 1][defender + i] for i in range(attacker)]))
+
+    losses = sum(1 - (i + 1) * matrixF[attacker * defender - 1][defender + i] for i in range(attacker)) # can sum losses_evs
+
+    # evm = np.array([attacker - sum((i + 1) * matrixF[attacker * defender - 1 - j][defender + i] for i in range(attacker)) for j in range(attacker * defender)]).reshape((attacker, defender))
+    # evm = np.rot90(evm, k=2)
 
     # evm_norm = evm / attacker
 
-    return winA, losses, pm, evm
+    return winA, losses, pm, losses_evs
 
 def plot_heatmap(matrix, label):
     """
@@ -200,7 +210,7 @@ def plot_heatmap(matrix, label):
 
     plt.imshow(matrix, cmap='hot', origin='lower')
     plt.gcf().canvas.set_window_title(label)
-    # plt.title('win probability')
+    # plt.title(label)
     plt.xlabel('defenders')
     plt.ylabel('attackers')
     clb = plt.colorbar()
@@ -209,15 +219,14 @@ def plot_heatmap(matrix, label):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='A program that, given the armies size of the attacker and the defender, calculates the probability of winning the battle and the expected losses of the attacker using Markov chain.')
-    parser.add_argument('-b', '--boost', default=False, action='store_true', help='boost CPU computation')
+    parser = argparse.ArgumentParser(description='A program that, given the armies size of the attacker and the defender, calculates the probability of winning the battle and the expected losses of the attacker using a Markov stochastic process.')
     parser.add_argument('-p', '--plot', default=False, action='store_true', help='plot the heatmaps')
 
     args = parser.parse_args()
 
     # print ('WARNING: 1 attacking tank is always considered to stay still\n')
     attacker, defender = read()
-    p, ev, pm, evm = solve(attacker, defender, args.boost)
+    p, ev, pm, lev = solve(attacker, defender)
     print ('Win probability: %.2f' % (p * 100) + '%')
     print ('Attacker expected losses: %.2f' % ev)
 
@@ -225,4 +234,8 @@ if __name__ == '__main__':
         import matplotlib.pyplot as plt
 
         plot_heatmap(pm, 'win probability')
-        plot_heatmap(evm, 'losses expected value')
+
+        # print(lev)
+        # plt.hist(lev, bins=lev, density=True)
+        # plt.fill_between(list(range(attacker)), lev, step='post')
+        # plt.show()
