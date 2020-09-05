@@ -1,8 +1,10 @@
 import argparse
 import re
 import math
-import numpy as np
 import copy
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 #TODO
 # fix plotting (axes start from 0, colorbar not always shows 0 and 1)
@@ -14,11 +16,11 @@ import copy
 # get statistics from matrices?
 # input loop?
 # doc
+# axes should have integers
+# BUG if attacker and defender >= 77
+
 
 def read():
-    """
-    """
-
     attacker = 0
     defender = 0
     pattern = re.compile('^[0-9]+$')
@@ -27,7 +29,6 @@ def read():
         a = input('Attacker armies: ')
         d = input('Defender armies: ')
 
-        # if pattern.match(a) and pattern.match(d) and  int(a) >= 2 and int(d) >= 1:
         if pattern.match(a) and pattern.match(d) and  int(a) >= 1 and int(d) >= 1:
             # attacker = int(a) - 1
             attacker = int(a)
@@ -37,13 +38,11 @@ def read():
 
     return attacker, defender
 
-def get_probabilities():
-    """
-    """
-    # dim 0: attackers number
-    # dim 1: defenders number
-    # dim 2: attacker losses
 
+def get_probabilities():
+    # dim 0: attacker number
+    # dim 1: defender number
+    # dim 2: attacker losses
     probabilities = [
         [
             [15/36, 21/36],
@@ -64,10 +63,8 @@ def get_probabilities():
 
     return probabilities
 
-def solve(attacker, defender):
-    """
-    """
 
+def solve(attacker, defender):
     probabilities = get_probabilities()
 
     matrixQ = np.zeros((attacker * defender, attacker * defender))
@@ -176,12 +173,23 @@ def solve(attacker, defender):
     # test if matrixF is well-formed
     # print(all(math.isclose(sum(row), 1) for row in matrixF))
 
-    # matrixF sparsity ratio
+    # sparsity ratios
+    # print(len(matrixQ[matrixQ == 0]) / len(matrixQ.flatten()))
+    # print(len(matrixR[matrixR == 0]) / len(matrixR.flatten()))
     # print(len(matrixF[matrixF == 0]) / len(matrixF.flatten()))
 
-    # sparsity matrix
-    # sparsity = copy.deepcopy(matrixF)
-    # sparsity[sparsity != 0] = 1
+    # sparsity matrices
+    # sparsityQ = copy.deepcopy(matrixQ)
+    # sparsityQ[sparsityQ != 0] = 1
+    # plot_heatmap(sparsityQ)
+
+    # sparsityR = copy.deepcopy(matrixR)
+    # sparsityR[sparsityR != 0] = 1
+    # plot_heatmap(sparsityR)
+
+    # sparsityF = copy.deepcopy(matrixF)
+    # sparsityF[sparsityF != 0] = 1
+    # plot_heatmap(sparsityF)
 
     winA = sum(matrixF[attacker * defender - 1][defender + i] for i in range(attacker))
     # winD = 1 - winA
@@ -189,11 +197,13 @@ def solve(attacker, defender):
     pm = np.array([sum(matrixF[attacker * defender - 1 - j][defender + i] for i in range(attacker)) for j in range(attacker * defender)]).reshape((attacker, defender))
     pm = np.rot90(pm, k=2)
 
-    # print(matrixF[attacker * defender - 1 - j])
-
     # winA = pm[attacker - 1][defender - 1]
 
-    losses_evs = list(reversed([1 - matrixF[attacker * defender - 1][defender + i] for i in range(attacker)]))
+    # losses_evs = list(reversed([1 - matrixF[attacker * defender - 1][defender + i] for i in range(attacker)]))
+    # print(losses_evs)
+    # plt.hist(losses_evs, bins=losses_evs, density=True)
+    # plt.fill_between(list(range(attacker)), losses_evs, step='post')
+    # plt.show()
 
     losses = sum(1 - (i + 1) * matrixF[attacker * defender - 1][defender + i] for i in range(attacker)) # can sum losses_evs
 
@@ -202,40 +212,28 @@ def solve(attacker, defender):
 
     # evm_norm = evm / attacker
 
-    return winA, losses, pm, losses_evs
+    return winA, losses, pm
 
-def plot_heatmap(matrix, label):
-    """
-    """
 
-    plt.imshow(matrix, cmap='hot', origin='lower')
-    plt.gcf().canvas.set_window_title(label)
-    # plt.title(label)
-    plt.xlabel('defenders')
-    plt.ylabel('attackers')
-    clb = plt.colorbar()
-    clb.set_label(label)    
+def plot_heatmap(heatmap):
+    plt.imshow(heatmap, cmap='hot', origin='lower')
+    # plt.gcf().canvas.set_window_title('win probability')
+    plt.xlabel('defender')
+    plt.ylabel('attacker')
+    plt.colorbar().set_label('win probability')
     plt.show()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='A program that, given the armies size of the attacker and the defender, calculates the probability of winning the battle and the expected losses of the attacker using a Markov stochastic process.')
     parser.add_argument('-p', '--plot', default=False, action='store_true', help='plot the heatmaps')
-
     args = parser.parse_args()
 
     # print ('WARNING: 1 attacking tank is always considered to stay still\n')
     attacker, defender = read()
-    p, ev, pm, lev = solve(attacker, defender)
+    p, ev, pm = solve(attacker, defender)
     print ('Win probability: %.2f' % (p * 100) + '%')
     print ('Attacker expected losses: %.2f' % ev)
 
-    if(args.plot):
-        import matplotlib.pyplot as plt
-
-        plot_heatmap(pm, 'win probability')
-
-        # print(lev)
-        # plt.hist(lev, bins=lev, density=True)
-        # plt.fill_between(list(range(attacker)), lev, step='post')
-        # plt.show()
+    if args.plot:
+        plot_heatmap(pm)
