@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a probabilities calculator that, given the armies size of the attacker and the defender, will calculate the **probability of the attaccker winning the battle** and the **expected losses of the attacker** using a _Markov stochastic process_. It can also plot the **probability heatmap**.
+This is a probabilities calculator that, given the armies size of the attacker and the defender, will calculate the **probability of the attacker winning the battle** and the **expected losses of the attacker** using a _Markov stochastic process_. It can also plot the **probability heatmap**.
 
 The project is based on *Markov Chains for the RISK Board Game Revisited*:
  ```
