@@ -15,11 +15,8 @@ def read_input():
         a = input()
         print("[green]Defender armies 🛡️: [/green]")
         d = input()
-        if pattern.match(a) and pattern.match(d):  # and int(a) > 0 and int(d) > 0:
-            attacker = int(a)
-            defender = int(d)
-            if attacker > 0 and defender > 0:
-                return attacker, defender
+        if pattern.match(a) and pattern.match(d):
+            return int(a), int(d)
         else:
             print("[red]These armies cannot fight!\n[/red]")
 
