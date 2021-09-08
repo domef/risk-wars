@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a probabilities calculator that, given the armies size of the attacker and the defender, will calculate the **probability of the attacker winning the battle** and the **expected losses of the attacker** using a _Markov stochastic process_. It can also plot the **probability heatmap**.
+This is a CLI probabilities calculator for the game RISIKO. Given the battle info, i.e. attaccker and defender armies size, it will compute the **probability of winning the battle** and more statistics about the battle.
 
 The project is based on *Markov Chains for the RISK Board Game Revisited*:
  ```
@@ -20,12 +20,3 @@ The project is based on *Markov Chains for the RISK Board Game Revisited*:
   year = {2003}
 }
  ``` 
- 
-## Usage
- 
-Program usage:
-```
-optional arguments:
- -h, --help   show this help message and exit
- -p, --plot   plot the heatmaps
- ```
