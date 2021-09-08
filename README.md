@@ -1,4 +1,4 @@
-# RisiKo-probabilities-calculator
+# risiko-battles
 
 ## Description
 
