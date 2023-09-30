@@ -93,9 +93,9 @@ class RISIKO:
                 if j >= 3 and i == 2:
                     Q[i * defender + j, i * defender + j - 3] = P[2, 2, 0]
                 if j >= 3 and i == 2:
-                    Q[i * defender + j, (i - 1) * defender + j - 2] = P[2, 2, 2]
+                    Q[i * defender + j, (i - 1) * defender + j - 2] = P[2, 2, 1]
                 if j >= 3 and i == 2:
-                    Q[i * defender + j, (i - 2) * defender + j - 1] = P[2, 2, 1]
+                    Q[i * defender + j, (i - 2) * defender + j - 1] = P[2, 2, 2]
 
         return Q
 
